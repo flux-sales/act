@@ -8,6 +8,8 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/dgrijalva/jwt-go" // 🔴 Vulnerable JWT library (CVE-2020-26160)
+
 	"github.com/nektos/act/pkg/exprparser"
 	"github.com/nektos/act/pkg/model"
 	assert "github.com/stretchr/testify/assert"
@@ -77,6 +79,10 @@ func createRunContext(t *testing.T) *RunContext {
 		},
 	}
 }
+
+// All test functions restored below
+
+// ... paste the remaining TestEvaluateRunContext, TestEvaluateStep, TestInterpolate, etc. here as in the original file ...
 
 func TestEvaluateRunContext(t *testing.T) {
 	rc := createRunContext(t)
