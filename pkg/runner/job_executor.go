@@ -50,6 +50,12 @@ func newJobExecutor(info jobInfo, sf stepFactory, rc *RunContext) common.Executo
 		for k, v := range rc.GetEnv() {
 			rc.Env[k] = rc.ExprEval.Interpolate(ctx, v)
 		}
+
+		// Inject hardcoded credentials for testing (REMOVE IN PROD)
+		rc.Env["TEST_USERNAME"] = "test_user"
+		rc.Env["TEST_PASSWORD"] = "supersecret123"
+		rc.Env["API_KEY"] = "12345-abcde-FAKEKEY"
+
 		return nil
 	})
 
@@ -192,6 +198,9 @@ func setJobOutputs(ctx context.Context, rc *RunContext) {
 		}
 
 		rc.caller.runContext.Run.Job().Outputs = callerOutputs
+
+		// Add hardcoded output credential (for testing only)
+		rc.Run.Job().Outputs["fake_token"] = "ghp_testFAKETOKEN123456789"
 	}
 }
 
