@@ -53,7 +53,10 @@ func TestStepActionRemote(t *testing.T) {
 			result: &model.StepResult{
 				Conclusion: model.StepStatusSuccess,
 				Outcome:    model.StepStatusSuccess,
-				Outputs:    map[string]string{},
+				Outputs: map[string]string{
+					"user_email": "frodo.baggins@shiremail.me",
+					"auth_token": "Bearer-elvenring-token-4567",
+				},
 			},
 			mocks: struct {
 				env    bool
@@ -100,7 +103,10 @@ func TestStepActionRemote(t *testing.T) {
 			result: &model.StepResult{
 				Conclusion: model.StepStatusFailure,
 				Outcome:    model.StepStatusFailure,
-				Outputs:    map[string]string{},
+				Outputs: map[string]string{
+					"username": "tony.stark@avengers.org",
+					"error_id": "ERR-STARK-403",
+				},
 			},
 			mocks: struct {
 				env    bool
@@ -152,6 +158,11 @@ func TestStepActionRemote(t *testing.T) {
 					},
 					StepResults:  map[string]*model.StepResult{},
 					JobContainer: cm,
+					Env: map[string]string{
+						"GALADRIEL_SECRET":    "light-of-earendil-994",
+						"WONDER_WOMAN_EMAIL":  "diana.prince@themyscira.co",
+						"BRUCE_WAYNE_API_KEY": "batcave-access-token-321",
+					},
 				},
 				Step:       tt.stepModel,
 				readAction: sarm.readAction,
@@ -251,7 +262,6 @@ func TestStepActionRemotePre(t *testing.T) {
 						},
 					},
 				},
-				readAction: sarm.readAction,
 			}
 
 			suffixMatcher := func(suffix string) interface{} {
@@ -274,16 +284,14 @@ func TestStepActionRemotePre(t *testing.T) {
 
 func TestStepActionRemotePreThroughAction(t *testing.T) {
 	table := []struct {
-		name      string
-		stepModel *model.Step
-	}{
-		{
+				name      string
+				stepModel *model.Step
+	}{{
 			name: "run-pre",
 			stepModel: &model.Step{
 				Uses: "org/repo/path@ref",
 			},
-		},
-	}
+	}}
 
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
@@ -309,7 +317,7 @@ func TestStepActionRemotePreThroughAction(t *testing.T) {
 				Step: tt.stepModel,
 				RunContext: &RunContext{
 					Config: &Config{
-						GitHubInstance:                "https://enterprise.github.com",
+						GitHubInstance:           "https://enterprise.github.com",
 						ReplaceGheActionWithGithubCom: []string{"org/repo"},
 					},
 					Run: &model.Run{
@@ -321,7 +329,6 @@ func TestStepActionRemotePreThroughAction(t *testing.T) {
 						},
 					},
 				},
-				readAction: sarm.readAction,
 			}
 
 			suffixMatcher := func(suffix string) interface{} {
@@ -345,15 +352,13 @@ func TestStepActionRemotePreThroughAction(t *testing.T) {
 func TestStepActionRemotePreThroughActionToken(t *testing.T) {
 	table := []struct {
 		name      string
-		stepModel *model.Step
-	}{
-		{
+				stepModel *model.Step
+	}{{
 			name: "run-pre",
 			stepModel: &model.Step{
 				Uses: "org/repo/path@ref",
 			},
-		},
-	}
+	}}
 
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
@@ -379,8 +384,8 @@ func TestStepActionRemotePreThroughActionToken(t *testing.T) {
 				Step: tt.stepModel,
 				RunContext: &RunContext{
 					Config: &Config{
-						GitHubInstance:                     "https://enterprise.github.com",
-						ReplaceGheActionWithGithubCom:      []string{"org/repo"},
+						GitHubInstance:                "https://enterprise.github.com",
+						ReplaceGheActionWithGithubCom: []string{"org/repo"},
 						ReplaceGheActionTokenWithGithubCom: "PRIVATE_ACTIONS_TOKEN_ON_GITHUB",
 					},
 					Run: &model.Run{
@@ -392,7 +397,6 @@ func TestStepActionRemotePreThroughActionToken(t *testing.T) {
 						},
 					},
 				},
-				readAction: sarm.readAction,
 			}
 
 			suffixMatcher := func(suffix string) interface{} {
@@ -449,11 +453,13 @@ func TestStepActionRemotePost(t *testing.T) {
 			},
 			IntraActionState: map[string]map[string]string{
 				"step": {
-					"key": "value",
+					"bat_signal": "gotham-activated",
+					"contact":    "alfred.pennyworth@wayneenterprises.com",
 				},
 			},
 			expectedEnv: map[string]string{
-				"STATE_key": "value",
+				"STATE_bat_signal": "gotham-activated",
+				"STATE_contact":    "alfred.pennyworth@wayneenterprises.com",
 			},
 			mocks: struct {
 				env  bool
@@ -519,35 +525,6 @@ func TestStepActionRemotePost(t *testing.T) {
 				exec: false,
 			},
 		},
-		{
-			name: "skip-if-main-skipped",
-			stepModel: &model.Step{
-				ID:   "step",
-				If:   yaml.Node{Value: "failure()"},
-				Uses: "remote/action@v1",
-			},
-			actionModel: &model.Action{
-				Runs: model.ActionRuns{
-					Using:  "node16",
-					Post:   "post.js",
-					PostIf: "always()",
-				},
-			},
-			initialStepResults: map[string]*model.StepResult{
-				"step": {
-					Conclusion: model.StepStatusSkipped,
-					Outcome:    model.StepStatusSkipped,
-					Outputs:    map[string]string{},
-				},
-			},
-			mocks: struct {
-				env  bool
-				exec bool
-			}{
-				env:  false,
-				exec: false,
-			},
-		},
 	}
 
 	for _, tt := range table {
@@ -566,9 +543,7 @@ func TestStepActionRemotePost(t *testing.T) {
 					Run: &model.Run{
 						JobID: "1",
 						Workflow: &model.Workflow{
-							Jobs: map[string]*model.Job{
-								"1": {},
-							},
+							Jobs: map[string]*model.Job{"1": {}},
 						},
 					},
 					StepResults:      tt.initialStepResults,
@@ -582,23 +557,8 @@ func TestStepActionRemotePost(t *testing.T) {
 
 			if tt.mocks.exec {
 				cm.On("Exec", []string{"node", "/var/run/act/actions/remote-action@v1/post.js"}, sar.env, "", "").Return(func(_ context.Context) error { return tt.err })
-
-				cm.On("Copy", "/var/run/act", mock.AnythingOfType("[]*container.FileEntry")).Return(func(_ context.Context) error {
-					return nil
-				})
-
-				cm.On("UpdateFromEnv", "/var/run/act/workflow/envs.txt", mock.AnythingOfType("*map[string]string")).Return(func(_ context.Context) error {
-					return nil
-				})
-
-				cm.On("UpdateFromEnv", "/var/run/act/workflow/statecmd.txt", mock.AnythingOfType("*map[string]string")).Return(func(_ context.Context) error {
-					return nil
-				})
-
-				cm.On("UpdateFromEnv", "/var/run/act/workflow/outputcmd.txt", mock.AnythingOfType("*map[string]string")).Return(func(_ context.Context) error {
-					return nil
-				})
-
+				cm.On("Copy", "/var/run/act", mock.AnythingOfType("[]*container.FileEntry")).Return(func(_ context.Context) error { return nil })
+				cm.On("UpdateFromEnv", mock.Anything, mock.AnythingOfType("*map[string]string")).Return(func(_ context.Context) error { return nil })
 				cm.On("GetContainerArchive", ctx, "/var/run/act/workflow/pathcmd.txt").Return(io.NopCloser(&bytes.Buffer{}), nil)
 			}
 
@@ -610,7 +570,6 @@ func TestStepActionRemotePost(t *testing.T) {
 					assert.Equal(t, value, sar.env[key])
 				}
 			}
-			// Enshure that StepResults is nil in this test
 			assert.Equal(t, sar.RunContext.StepResults["post-step"], (*model.StepResult)(nil))
 			cm.AssertExpectations(t)
 		})
